@@ -1,0 +1,16 @@
+aphid
+whitefly
+grasshopper
+beetle
+caterpillar
+fall armyworm
+stem borer
+leaf miner
+thrips
+bollworm
+termite
+rice bug
+brown planthopper
+cutworm
+potato tuber moth
+fruit borer

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="#CC000000">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Live Insect Detection"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="24sp"
+            android:gravity="center" />
+
+        <Spinner
+            android:id="@+id/cropSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="12dp"
+            android:background="#FFFFFF" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/resultPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="18dp"
+        android:layout_gravity="bottom"
+        android:background="#DD1B5E20">
+
+        <TextView
+            android:id="@+id/txtInsect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Insect: scanning..."
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/txtCrop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Crop: select crop"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp"
+            android:layout_marginTop="6dp" />
+
+        <TextView
+            android:id="@+id/txtSignal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Signal: waiting"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="22sp"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/txtAdvice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Advice will appear here."
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:layout_marginTop="6dp" />
+
+    </LinearLayout>
+
+</FrameLayout>
