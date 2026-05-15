@@ -10,7 +10,9 @@ import 'camera_holder.dart';
 import 'crop_live_intelligence.dart';
 import 'crop_risk_database.dart';
 import 'insect_classifier.dart';
+import 'live_scan_crop_heuristics.dart';
 import 'live_scan_web_insight_service.dart';
+import 'l10n/app_localizations.dart';
 
 /// Live camera scan: insect risk, crop disease context, IPM guidance, and optional Wikipedia context.
 class InsectLiveScanScreen extends StatefulWidget {
@@ -22,22 +24,14 @@ class InsectLiveScanScreen extends StatefulWidget {
 
 class _InsectLiveScanScreenState extends State<InsectLiveScanScreen>
     with WidgetsBindingObserver {
-  static const List<String> _crops = [
-    'Rice',
-    'Maize',
-    'Wheat',
-    'Potato',
-    'Tomato',
-    'Mustard',
-    'Sugarcane',
-    'Cotton',
-  ];
-
   final InsectClassifier _classifier = InsectClassifier();
   final CropRiskDatabase _riskDb = CropRiskDatabase();
 
   CameraController? _controller;
-  String _selectedCrop = _crops.first;
+  String _selectedCrop = LiveScanCropHeuristics.crops.first;
+  double _cropAutoConfidence = 0.45;
+  String? _cropVoteCrop;
+  int _cropVoteStreak = 0;
 
   InsectResult? _lastResult;
   bool _harmful = false;
@@ -115,9 +109,14 @@ class _InsectLiveScanScreenState extends State<InsectLiveScanScreen>
     setState(() => _controller = controller);
   }
 
-  void _applyInsightAndWiki(InsectResult result, bool harmful, String advice) {
+  void _applyScanState({
+    required String crop,
+    required InsectResult result,
+    required bool harmful,
+    required String advice,
+  }) {
     final bundle = CropLiveIntelligence.build(
-      crop: _selectedCrop,
+      crop: crop,
       insectLabel: result.insectName,
       plausibleFrame: result.plausibleSubject,
       modelReady: result.modelReady,
@@ -126,15 +125,33 @@ class _InsectLiveScanScreenState extends State<InsectLiveScanScreen>
       confidence: result.confidence,
     );
     setState(() {
+      _selectedCrop = crop;
       _lastResult = result;
       _harmful = harmful;
       _advice = advice;
       _insightBundle = bundle;
     });
-    _scheduleWikiFetch(result);
+    _scheduleWikiFetch(result, crop: crop);
   }
 
-  void _scheduleWikiFetch(InsectResult result) {
+  String _smoothCropChoice(LiveScanCropEstimate estimate) {
+    if (estimate.crop == _cropVoteCrop) {
+      _cropVoteStreak++;
+    } else {
+      _cropVoteCrop = estimate.crop;
+      _cropVoteStreak = 1;
+    }
+    if (_cropVoteStreak >= 2 || estimate.confidence >= 0.62) {
+      _cropAutoConfidence = (_cropAutoConfidence * 0.62 + estimate.confidence * 0.38)
+          .clamp(0.25, 0.95);
+      return estimate.crop;
+    }
+    _cropAutoConfidence = (_cropAutoConfidence * 0.85 + estimate.confidence * 0.15)
+        .clamp(0.22, 0.92);
+    return _selectedCrop;
+  }
+
+  void _scheduleWikiFetch(InsectResult result, {required String crop}) {
     _wikiDebounce?.cancel();
     if (!result.modelReady || !result.plausibleSubject) {
       if (mounted) {
@@ -148,7 +165,7 @@ class _InsectLiveScanScreenState extends State<InsectLiveScanScreen>
     if (mounted) setState(() => _wikiLoading = true);
     _wikiDebounce = Timer(const Duration(seconds: 2), () async {
       final text = await LiveScanWebInsightService.instance.fetchInsightForScan(
-        crop: _selectedCrop,
+        crop: crop,
         insectName: result.insectName,
         plausible: result.plausibleSubject,
       );
@@ -176,15 +193,19 @@ class _InsectLiveScanScreenState extends State<InsectLiveScanScreen>
         _busy = false;
         return;
       }
+      final rgb = _classifier.decodeCameraRgb(frame);
+      final est = rgb != null ? LiveScanCropHeuristics.estimate(rgb) : null;
+      final cropNow = est == null ? _selectedCrop : _smoothCropChoice(est);
+
       final plausible = result.plausibleSubject;
       final harmful = result.modelReady &&
           plausible &&
-          _riskDb.isHarmful(result.insectName, _selectedCrop);
+          _riskDb.isHarmful(result.insectName, cropNow);
       final advice = plausible
-          ? _riskDb.getAdvice(result.insectName, _selectedCrop, harmful)
+          ? _riskDb.getAdvice(result.insectName, cropNow, harmful)
           : result.message;
 
-      _applyInsightAndWiki(result, harmful, advice);
+      _applyScanState(crop: cropNow, result: result, harmful: harmful, advice: advice);
 
       if (harmful &&
           plausible &&
@@ -243,7 +264,8 @@ class _InsectLiveScanScreenState extends State<InsectLiveScanScreen>
     String signal = 'Waiting for detection…';
     String advice = 'Point the camera at crop leaves or an insect.';
     String insectLine = 'Insect: —';
-    final cropLine = 'Crop: $_selectedCrop';
+    final confPct = (_cropAutoConfidence * 100).round();
+    final cropLine = 'Crop: $_selectedCrop · auto (confidence ~$confPct%)';
 
     if (r != null) {
       insectLine =
@@ -281,7 +303,7 @@ class _InsectLiveScanScreenState extends State<InsectLiveScanScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Live crop & insect scan'),
+        title: Text(AppLocalizations.of(context).liveScanTitle),
         centerTitle: true,
       ),
       body: _fatalError != null
@@ -293,19 +315,47 @@ class _InsectLiveScanScreenState extends State<InsectLiveScanScreen>
                     const Expanded(child: Center(child: CircularProgressIndicator())),
                   ],
                 )
-              : Column(
-                  children: [
-                    if (_classifier.usesDemoModel) _demoModeBanner(),
-                    _cropSelector(),
-                    Expanded(
-                      flex: 52,
-                      child: _cameraPreview(),
-                    ),
-                    Expanded(
-                      flex: 48,
-                      child: _insightsPanel(context),
-                    ),
-                  ],
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final scheme = Theme.of(context).colorScheme;
+                    return Column(
+                      children: [
+                        if (_classifier.usesDemoModel) _demoModeBanner(),
+                        Expanded(
+                          flex: 11,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: scheme.outlineVariant.withValues(alpha: 0.55),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.12),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(15),
+                                child: ColoredBox(
+                                  color: Colors.black,
+                                  child: _cameraPreview(context),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 13,
+                          child: _insightsPanel(context),
+                        ),
+                      ],
+                    );
+                  },
                 ),
     );
   }
@@ -414,7 +464,7 @@ class _InsectLiveScanScreenState extends State<InsectLiveScanScreen>
               context,
               initiallyExpanded: true,
               icon: Icons.bug_report_outlined,
-              title: 'Insect risk (for $_selectedCrop)',
+              title: 'Insect risk (for $_selectedCrop · auto)',
               child: Text(
                 bundle.insectRiskSummary,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.35),
@@ -525,18 +575,19 @@ class _InsectLiveScanScreenState extends State<InsectLiveScanScreen>
   Widget _demoModeBanner() => Material(
         color: const Color(0xFFFFF3E0),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: Row(
             children: [
-              Icon(Icons.science_outlined, color: Colors.orange.shade800, size: 22),
-              const SizedBox(width: 10),
+              Icon(Icons.science_outlined, color: Colors.orange.shade800, size: 20),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Demo mode — scene heuristics only. Add insect_model.tflite for trained detection.',
+                  'Demo mode — add assets/insect_model.tflite for trained insect ID. '
+                  'Crop row is estimated from frame colours (not a crop classifier).',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     color: Colors.orange.shade900,
-                    height: 1.25,
+                    height: 1.2,
                   ),
                 ),
               ),
@@ -552,53 +603,40 @@ class _InsectLiveScanScreenState extends State<InsectLiveScanScreen>
         ),
       );
 
-  Widget _cropSelector() => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        child: Row(
-          children: [
-            const Text('Crop:', style: TextStyle(fontSize: 16)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: DropdownButton<String>(
-                value: _selectedCrop,
-                isExpanded: true,
-                menuMaxHeight: 320,
-                items: _crops
-                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                    .toList(),
-                onChanged: (v) {
-                  if (v == null) return;
-                  setState(() => _selectedCrop = v);
-                  final r = _lastResult;
-                  if (r != null) {
-                    final plausible = r.plausibleSubject;
-                    final harmful = r.modelReady &&
-                        plausible &&
-                        _riskDb.isHarmful(r.insectName, _selectedCrop);
-                    final advice = plausible
-                        ? _riskDb.getAdvice(r.insectName, _selectedCrop, harmful)
-                        : r.message;
-                    _applyInsightAndWiki(r, harmful, advice);
-                  }
-                },
+  Widget _cameraPreview(BuildContext context) {
+    final c = _controller!;
+    if (!c.value.isInitialized) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    final previewSize = c.value.previewSize;
+    if (previewSize == null) {
+      return CameraPreview(
+        c,
+        key: ValueKey<String>('${c.description.name}_${c.description.lensDirection}'),
+      );
+    }
+    final isPortrait = MediaQuery.orientationOf(context) == Orientation.portrait;
+    final imageWidth = isPortrait ? previewSize.height : previewSize.width;
+    final imageHeight = isPortrait ? previewSize.width : previewSize.height;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return FittedBox(
+          clipBehavior: Clip.hardEdge,
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
+          child: SizedBox(
+            width: imageWidth,
+            height: imageHeight,
+            child: CameraPreview(
+              c,
+              key: ValueKey<String>(
+                '${c.description.name}_${c.description.lensDirection}',
               ),
             ),
-          ],
-        ),
-      );
-
-  Widget _cameraPreview() {
-    final c = _controller!;
-    return ClipRect(
-      child: AspectRatio(
-        aspectRatio: c.value.aspectRatio,
-        child: CameraPreview(
-          c,
-          key: ValueKey<String>(
-            '${c.description.name}_${c.description.lensDirection}',
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

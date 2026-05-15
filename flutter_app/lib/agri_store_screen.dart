@@ -8,6 +8,7 @@ import 'agri_product_repository.dart';
 import 'agri_store_catalog.dart';
 import 'farmer_account_screen.dart';
 import 'farmer_profile_storage.dart';
+import 'l10n/app_localizations.dart';
 
 /// Agri inputs shop: searchable grid; product art from [AgriProduct.imageUrl].
 class AgriStoreScreen extends StatefulWidget {
@@ -41,7 +42,8 @@ class _AgriStoreScreenState extends State<AgriStoreScreen> {
     super.dispose();
   }
 
-  String get _appBarTitle => _category == 'All' ? 'Agri inputs shop' : _category;
+  String _appBarTitle(BuildContext context) =>
+      AppLocalizations.of(context).shopAppBarTitle(_category);
 
   List<AgriProduct> get _filtered {
     var list = List<AgriProduct>.from(AgriProductRepository.instance.products);
@@ -177,14 +179,14 @@ class _AgriStoreScreenState extends State<AgriStoreScreen> {
 
               return Scaffold(
                 appBar: AppBar(
-                  title: Text(_appBarTitle),
+                  title: Text(_appBarTitle(context)),
                   actions: [
                 ListenableBuilder(
                   listenable: FarmerProfileController.instance,
                   builder: (context, _) {
                     final n = FarmerProfileController.instance.profile.displayName;
                     return IconButton(
-                      tooltip: n.isEmpty ? 'My account' : 'My account ($n)',
+                      tooltip: n.isEmpty ? AppLocalizations.of(context).shopMyAccount : '${AppLocalizations.of(context).shopMyAccount} ($n)',
                       icon: const Icon(Icons.account_circle_outlined),
                       onPressed: () async {
                         await Navigator.of(context).push<void>(

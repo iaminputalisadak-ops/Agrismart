@@ -10,6 +10,8 @@ import 'agri_store_catalog.dart';
 class AdminProductsScreen extends StatefulWidget {
   const AdminProductsScreen({super.key, this.embedded = false});
 
+  final bool embedded;
+
   @override
   State<AdminProductsScreen> createState() => _AdminProductsScreenState();
 }
@@ -400,7 +402,7 @@ class _ProductEditorPanelState extends State<_ProductEditorPanel> {
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               key: ValueKey(_category),
-              value: _category,
+              initialValue: _category,
               decoration: const InputDecoration(
                 labelText: 'Category',
                 prefixIcon: Icon(Icons.category_outlined),

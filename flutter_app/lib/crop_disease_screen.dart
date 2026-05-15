@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'crop_disease_classifier.dart';
+import 'l10n/app_localizations.dart';
 
 /// Pick or capture a leaf photo, validate it is crop-related, then run optional disease TFLite.
 class CropDiseaseScreen extends StatefulWidget {
@@ -75,7 +76,7 @@ class _CropDiseaseScreenState extends State<CropDiseaseScreen> {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: const Text('Crop Disease Detection'),
+          title: Text(AppLocalizations.of(context).diseaseTitle),
         ),
         body: _loading
             ? const Center(child: CircularProgressIndicator())

@@ -92,6 +92,7 @@ class AgriProduct {
         productName: name,
         category: category,
         imageUrlOverride: imageUrlOverride,
+        productId: id,
       );
 
   AgriProduct copyWith({

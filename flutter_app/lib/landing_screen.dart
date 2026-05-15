@@ -5,6 +5,8 @@ import 'agri_cached_product_image.dart';
 
 import 'auth_controller.dart';
 import 'farmer_register_screen.dart';
+import 'language_picker_sheet.dart';
+import 'l10n/app_localizations.dart';
 
 /// AgriSmart welcome + sign-in (opens before the main shell).
 class LandingScreen extends StatefulWidget {
@@ -67,6 +69,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = ColorScheme.fromSeed(
       seedColor: const Color(0xFF1B5E20),
       brightness: Brightness.light,
@@ -143,7 +146,7 @@ class _LandingScreenState extends State<LandingScreen> {
                               const Icon(Icons.eco, color: Colors.white, size: 32),
                               const SizedBox(width: 10),
                               Text(
-                                'AgriSmart',
+                                l10n.landingBrand,
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -154,7 +157,7 @@ class _LandingScreenState extends State<LandingScreen> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Welcome back. Let’s grow together.',
+                            l10n.landingWelcome,
                             style: theme.textTheme.titleMedium?.copyWith(
                               color: Colors.white.withValues(alpha: 0.95),
                               fontWeight: FontWeight.w500,
@@ -179,15 +182,26 @@ class _LandingScreenState extends State<LandingScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          'Farmer sign-in',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                l10n.landingFarmerSignIn,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => showLanguagePicker(context),
+                              child: Text(l10n.languageTitle),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Use the email and password from your registration.',
+                          l10n.landingFarmerSignInHint,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: scheme.onSurfaceVariant,
                             height: 1.35,
@@ -197,16 +211,13 @@ class _LandingScreenState extends State<LandingScreen> {
                         OutlinedButton.icon(
                           onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Google Sign-In is not wired in this demo build. '
-                                  'Use email and password, or register a new account.',
-                                ),
+                              SnackBar(
+                                content: Text(l10n.landingGoogleSnack),
                               ),
                             );
                           },
                           icon: const Icon(Icons.mail_outline),
-                          label: const Text('Sign in with Gmail'),
+                          label: Text(l10n.landingGmail),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             side: BorderSide(color: scheme.primary, width: 1.4),
@@ -220,7 +231,7 @@ class _LandingScreenState extends State<LandingScreen> {
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               child: Text(
-                                'or use email and password',
+                                l10n.landingOrEmail,
                                 style: theme.textTheme.labelMedium?.copyWith(
                                   color: scheme.primary,
                                   fontWeight: FontWeight.w600,
@@ -237,10 +248,10 @@ class _LandingScreenState extends State<LandingScreen> {
                           autocorrect: false,
                           textInputAction: TextInputAction.next,
                           onChanged: (_) => setState(() {}),
-                          decoration: const InputDecoration(
-                            labelText: 'Email',
-                            hintText: 'you@example.com',
-                            prefixIcon: Icon(Icons.mail_outline),
+                          decoration: InputDecoration(
+                            labelText: l10n.landingEmail,
+                            hintText: l10n.landingEmailHint,
+                            prefixIcon: const Icon(Icons.mail_outline),
                           ),
                         ),
                         const SizedBox(height: 14),
@@ -253,11 +264,11 @@ class _LandingScreenState extends State<LandingScreen> {
                             if (_canFarmerLogin) _farmerLogin();
                           },
                           decoration: InputDecoration(
-                            labelText: 'Password',
-                            hintText: 'Your account password',
+                            labelText: l10n.landingPassword,
+                            hintText: l10n.landingPasswordHint,
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
-                              tooltip: _obscure ? 'Show' : 'Hide',
+                              tooltip: _obscure ? l10n.showPassword : l10n.hidePassword,
                               icon: Icon(
                                 _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                               ),
@@ -280,7 +291,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                   width: 22,
                                   child: CircularProgressIndicator(strokeWidth: 2),
                                 )
-                              : const Text('Login'),
+                              : Text(l10n.landingLogin),
                         ),
                         const SizedBox(height: 20),
                         OutlinedButton.icon(
@@ -294,14 +305,14 @@ class _LandingScreenState extends State<LandingScreen> {
                             await AuthController.instance.restoreSession();
                           },
                           icon: const Icon(Icons.person_add_alt_1_outlined),
-                          label: const Text('Create new account'),
+                          label: Text(l10n.landingCreateAccount),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'New to AgriSmart? Tap to create a free farmer account.',
+                          l10n.landingNewUserHint,
                           textAlign: TextAlign.center,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: scheme.primary,
@@ -314,15 +325,14 @@ class _LandingScreenState extends State<LandingScreen> {
                         OutlinedButton.icon(
                           onPressed: _showAdminDialog,
                           icon: const Icon(Icons.admin_panel_settings_outlined),
-                          label: const Text('Login as Admin'),
+                          label: Text(l10n.landingAdminLogin),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          'Demo admin: admin@agrismart.com / admin123 — manage products under '
-                          'Account → Admin panel after sign-in.',
+                          l10n.landingAdminDemoHint,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: scheme.onSurfaceVariant,
                             height: 1.4,

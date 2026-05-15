@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'farmer_profile_storage.dart';
 import 'farming_assistant_qa_bank.dart';
+import 'l10n/app_localizations.dart';
 
 class _ChatTurn {
   const _ChatTurn.user(this.message) : isAssistant = false;
@@ -187,7 +188,7 @@ class _AiFarmingAssistantScreenState extends State<AiFarmingAssistantScreen> {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: const Text('AI Farming Assistant'),
+          title: Text(AppLocalizations.of(context).assistantTitle),
           actions: [
             IconButton(
               icon: const Icon(Icons.delete_outline),

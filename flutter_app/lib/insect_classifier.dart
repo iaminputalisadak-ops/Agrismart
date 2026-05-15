@@ -308,6 +308,10 @@ class InsectClassifier {
     _demoMode = false;
   }
 
+  /// Decodes a camera frame to RGB for auxiliary heuristics (e.g. crop colour hints).
+  /// Not used for TFLite tensor layout.
+  img.Image? decodeCameraRgb(CameraImage frame) => _cameraImageToRgb(frame);
+
   // ---------- camera frame conversion ----------
 
   img.Image? _cameraImageToRgb(CameraImage frame) {

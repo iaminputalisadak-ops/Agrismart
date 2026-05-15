@@ -6,6 +6,9 @@ import 'crop_disease_screen.dart';
 import 'farmer_profile_storage.dart';
 import 'farmer_register_screen.dart';
 import 'insect_live_scan_screen.dart';
+import 'language_picker_sheet.dart';
+import 'l10n/app_localizations.dart';
+import 'locale_controller.dart';
 
 /// Farmer profile, integrated crop intelligence tools, and admin catalogue (role-based).
 class FarmerAccountScreen extends StatelessWidget {
@@ -17,6 +20,7 @@ class FarmerAccountScreen extends StatelessWidget {
       listenable: Listenable.merge([
         FarmerProfileController.instance,
         AuthController.instance,
+        LocaleController.instance,
       ]),
       builder: (context, _) {
         final scheme = Theme.of(context).colorScheme;
@@ -24,10 +28,12 @@ class FarmerAccountScreen extends StatelessWidget {
         final auth = AuthController.instance;
         final p = FarmerProfileController.instance.profile;
         final hasProfile = p.displayName.isNotEmpty;
+        final l10n = AppLocalizations.of(context);
+        final langCode = LocaleController.instance.locale.languageCode;
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(auth.isAdmin ? 'Account' : 'My account'),
+            title: Text(auth.isAdmin ? l10n.accountAdmin : l10n.accountMy),
             actions: [
               if (!auth.isAdmin)
                 TextButton(
@@ -39,10 +45,10 @@ class FarmerAccountScreen extends StatelessWidget {
                     );
                     await FarmerProfileController.instance.refresh();
                   },
-                  child: Text(hasProfile ? 'Edit' : 'Register'),
+                  child: Text(hasProfile ? l10n.edit : l10n.register),
                 ),
               IconButton(
-                tooltip: 'Sign out',
+                tooltip: l10n.signOut,
                 icon: const Icon(Icons.logout),
                 onPressed: () => AuthController.instance.logout(),
               ),
@@ -51,13 +57,23 @@ class FarmerAccountScreen extends StatelessWidget {
           body: ListView(
             padding: const EdgeInsets.all(20),
             children: [
+              Card(
+                margin: EdgeInsets.zero,
+                child: ListTile(
+                  leading: Icon(Icons.language, color: scheme.primary),
+                  title: Text(l10n.languageListTile),
+                  subtitle: Text(LocaleController.pickerLabel(langCode)),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => showLanguagePicker(context),
+                ),
+              ),
+              const SizedBox(height: 16),
               if (auth.isAdmin) ...[
                 _banner(
                   context,
                   icon: Icons.admin_panel_settings_outlined,
-                  title: 'Administrator',
-                  subtitle:
-                      'Signed in as ${auth.email}. Open the admin dashboard to manage products, farmers, and crop-tool notes.',
+                  title: l10n.adminBannerTitle,
+                  subtitle: l10n.adminBannerBodyFor(auth.email),
                   color: scheme.tertiaryContainer,
                   onText: scheme.onTertiaryContainer,
                 ),
@@ -71,26 +87,26 @@ class FarmerAccountScreen extends StatelessWidget {
                     );
                   },
                   icon: const Icon(Icons.dashboard_customize_outlined),
-                  label: const Text('Admin dashboard'),
+                  label: Text(l10n.adminDashButton),
                 ),
                 const SizedBox(height: 28),
               ],
               if (!auth.isAdmin) ...[
                 Text(
-                  'Crop intelligence',
+                  l10n.cropIntel,
                   style: d.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Run detection from your account — same tools as the Home and Live scan tabs.',
+                  l10n.cropIntelBody,
                   style: d.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.35),
                 ),
                 const SizedBox(height: 14),
                 _toolCard(
                   context,
                   icon: Icons.bug_report_outlined,
-                  title: 'Live crop & insect scan',
-                  subtitle: 'Real-time camera scan with crop-specific harm alerts.',
+                  title: l10n.liveScanToolT,
+                  subtitle: l10n.liveScanToolS,
                   onTap: () {
                     Navigator.of(context).push<void>(
                       MaterialPageRoute<void>(
@@ -102,8 +118,8 @@ class FarmerAccountScreen extends StatelessWidget {
                 _toolCard(
                   context,
                   icon: Icons.spa_outlined,
-                  title: 'Crop disease check (photo)',
-                  subtitle: 'Analyze a leaf or canopy photo for disease signals.',
+                  title: l10n.diseaseToolT,
+                  subtitle: l10n.diseaseToolS,
                   onTap: () {
                     Navigator.of(context).push<void>(
                       MaterialPageRoute<void>(
@@ -116,23 +132,23 @@ class FarmerAccountScreen extends StatelessWidget {
               ],
               if (!auth.isAdmin) ...[
                 Text(
-                  'Profile & delivery',
+                  l10n.profileDelivery,
                   style: d.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
-                if (!hasProfile)
+                if (!hasProfile) ...[
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Icon(Icons.person_outline, size: 56, color: scheme.outline),
                       const SizedBox(height: 12),
                       Text(
-                        'Complete your farmer profile',
+                        l10n.completeProfileTitle,
                         style: d.titleLarge?.copyWith(fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Add your name, phone, email, and delivery address for checkout and personalized help.',
+                        l10n.completeProfileBody,
                         style: d.bodyMedium?.copyWith(
                           color: scheme.onSurfaceVariant,
                           height: 1.35,
@@ -148,11 +164,11 @@ class FarmerAccountScreen extends StatelessWidget {
                           );
                           await FarmerProfileController.instance.refresh();
                         },
-                        child: const Text('Register'),
+                        child: Text(l10n.registerButton),
                       ),
                     ],
                   ),
-                else ...[
+                ] else ...[
                   Text(
                     p.displayName,
                     style: d.headlineSmall?.copyWith(
@@ -162,7 +178,7 @@ class FarmerAccountScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Used on checkout, assistant, and anywhere your account appears.',
+                    l10n.usedCheckout,
                     style: d.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: 20),
@@ -180,18 +196,18 @@ class FarmerAccountScreen extends StatelessWidget {
                       await FarmerProfileController.instance.refresh();
                     },
                     icon: const Icon(Icons.edit_outlined),
-                    label: const Text('Edit profile'),
+                    label: Text(l10n.editProfile),
                   ),
                 ],
               ],
               if (auth.isAdmin) ...[
                 Text(
-                  'Admin tools',
+                  l10n.adminTools,
                   style: d.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Farmer profiles and crop shortcuts are hidden here. Use the main tabs (Home, Live scan) for crop tools.',
+                  l10n.adminToolsBody,
                   style: d.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.35),
                 ),
               ],

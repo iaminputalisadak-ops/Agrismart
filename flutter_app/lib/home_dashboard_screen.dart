@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'crop_disease_screen.dart';
 import 'farmer_profile_storage.dart';
 import 'farmer_register_screen.dart';
+import 'l10n/app_localizations.dart';
 
 /// Landing hub: crop tools and shop are sections of the same app (not separate launchers).
 class HomeDashboardScreen extends StatelessWidget {
@@ -15,10 +16,11 @@ class HomeDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final d = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AgriSmart'),
+        title: Text(l10n.homeAppBarTitle),
         centerTitle: true,
       ),
       body: ListView(
@@ -34,7 +36,7 @@ class HomeDashboardScreen extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
-                  'Hello, $name',
+                  l10n.homeHello(name),
                   style: d.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: scheme.primary,
@@ -44,12 +46,12 @@ class HomeDashboardScreen extends StatelessWidget {
             },
           ),
           Text(
-            'Your farming tools',
+            l10n.homeToolsHeadline,
             style: d.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
-            'Live pest checks, disease screening, inputs, and help — all in this app.',
+            l10n.homeToolsBlurb,
             style: d.bodyMedium?.copyWith(
               color: scheme.onSurfaceVariant,
               height: 1.35,
@@ -58,15 +60,14 @@ class HomeDashboardScreen extends StatelessWidget {
           const SizedBox(height: 20),
           _FeatureCard(
             icon: Icons.bug_report_outlined,
-            title: 'Live crop & insect scan',
-            subtitle:
-                'Camera scan with alerts when an insect may harm your selected crop.',
+            title: l10n.featLiveScanT,
+            subtitle: l10n.featLiveScanS,
             onTap: () => onSelectTab(1),
           ),
           _FeatureCard(
             icon: Icons.spa_outlined,
-            title: 'Crop disease check (photo)',
-            subtitle: 'Capture or choose a leaf photo for disease screening.',
+            title: l10n.featDiseaseT,
+            subtitle: l10n.featDiseaseS,
             onTap: () {
               Navigator.of(context).push<void>(
                 MaterialPageRoute<void>(
@@ -77,20 +78,20 @@ class HomeDashboardScreen extends StatelessWidget {
           ),
           _FeatureCard(
             icon: Icons.storefront_outlined,
-            title: 'Agri inputs shop',
-            subtitle: 'Seeds, fertilizer, and crop protection products.',
+            title: l10n.featShopT,
+            subtitle: l10n.featShopS,
             onTap: () => onSelectTab(2),
           ),
           _FeatureCard(
             icon: Icons.chat_bubble_outline,
-            title: 'AI farming assistant',
-            subtitle: 'Questions on crops, pests, and practices.',
+            title: l10n.featAssistantT,
+            subtitle: l10n.featAssistantS,
             onTap: () => onSelectTab(3),
           ),
           _FeatureCard(
             icon: Icons.app_registration_outlined,
-            title: 'Farmer registration',
-            subtitle: 'Save your profile for checkout and personalized help.',
+            title: l10n.featRegisterT,
+            subtitle: l10n.featRegisterS,
             onTap: () {
               Navigator.of(context).push<void>(
                 MaterialPageRoute<void>(
@@ -101,8 +102,8 @@ class HomeDashboardScreen extends StatelessWidget {
           ),
           _FeatureCard(
             icon: Icons.person_outline,
-            title: 'My account',
-            subtitle: 'View or edit your saved profile.',
+            title: l10n.featAccountT,
+            subtitle: l10n.featAccountS,
             onTap: () => onSelectTab(4),
           ),
         ],
