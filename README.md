@@ -1,46 +1,95 @@
-# Insect Crop Harm Camera Detector
+# AgriSmart
 
-Two versions of the same app live in this repo. Pick whichever you prefer:
+Cross-platform farming companion app: live pest scan, crop disease checks, local agri shop, farming Q&A assistant, and admin product management. Built with **Flutter** (primary) and a legacy **native Android** insect camera demo.
 
-| Version | Folder | Language | Builds for |
-|---|---|---|---|
-| **Native Android** | `app/` (this folder uses root `gradlew`) | Java | Android |
-| **Flutter (cross-platform)** | `flutter_app/` | Dart | Android **and** iOS |
-
-Both versions:
-
-- Open a live camera preview
-- Let you pick the crop (Rice, Wheat, Tomato, ...)
-- Classify the insect in view with a TensorFlow Lite model
-- Show **DANGER** (red + beep + vibration) if the insect is harmful for that crop
-- Show **SAFE** (green) otherwise
-
-You only need to supply your own trained `insect_model.tflite` — see
-`app/src/main/assets/README_MODEL.txt` or `flutter_app/assets/README_MODEL.txt`
-for a 5-minute training walkthrough using Teachable Machine.
+**Repository:** [github.com/iaminputalisadak-ops/Agrismart](https://github.com/iaminputalisadak-ops/Agrismart)
 
 ---
 
-## A. Running the native Android version
+## Features (Flutter app)
+
+| Area | Description |
+|------|-------------|
+| **Live scan** | Camera preview, crop context (heuristics + optional TFLite insect model), harm lookup per crop, optional Wikipedia summaries |
+| **Crop disease** | Photo-based disease screening (optional TFLite model — see assets README) |
+| **Agri shop** | Browse seeds, fertilizers, pesticides, tools; cart and checkout with map-based delivery address |
+| **Farming assistant** | Offline Q&A bank with preset topics and free-text keyword matching |
+| **Admin panel** | Product CRUD, dashboard metrics (SQLite on device) |
+| **Languages** | English, Hindi, Nepali, Russian (in-app language picker) |
+| **Accounts** | Farmer registration/sign-in (local demo); admin sign-in for catalogue management |
+
+---
+
+## Quick start (Flutter — recommended)
 
 ### Requirements
 
-- [Android Studio](https://developer.android.com/studio) (Hedgehog or newer), **or** just
-  - JDK **17**
-  - Android SDK (commandline tools + platform 35 + build-tools 34/35)
-- A physical Android phone with USB debugging enabled
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) stable **≥ 3.19**
+- Android: JDK 17 + Android SDK (API 24+)
+- iOS: Xcode + CocoaPods (macOS only)
+- A physical device with a camera for live scan
 
-The Gradle wrapper (`gradlew`, `gradlew.bat`, `gradle/wrapper/`) is already
-included, so you don't need a global Gradle install.
+### Run
 
-### Option 1 — Android Studio (easiest)
+```bash
+cd flutter_app
+flutter pub get
+flutter run
+```
 
-1. Open this folder in Android Studio.
-2. Let it sync Gradle (first run may take ~5 min).
-3. Drop your trained model into `app/src/main/assets/insect_model.tflite`.
-4. Click **Run** ▶.
+Grant **camera** and **location** permissions when prompted.
 
-### Option 2 — Command line
+### Demo admin login
+
+- Email: `admin@agrismart.com`
+- Password: `admin123`
+
+After sign-in: **Account → Admin panel** to manage products.
+
+Farmers must **register** on the landing screen before signing in (credentials are stored locally for demo purposes only).
+
+---
+
+## Optional ML models
+
+The app runs without custom models (heuristics + labels). For better accuracy, add TensorFlow Lite files:
+
+| Model | Path | Guide |
+|-------|------|--------|
+| Insect classifier | `flutter_app/assets/insect_model.tflite` | `flutter_app/assets/README_INSECT_MODEL.txt` |
+| Crop disease | per `flutter_app/assets/README_CROP_DISEASE_MODEL.txt` | same folder |
+
+Register new asset files under `flutter: assets:` in `flutter_app/pubspec.yaml`, then rebuild.
+
+---
+
+## Project layout
+
+```
+Agrismart/
+├── README.md                 ← this file
+├── app/                      Legacy native Android insect camera (Java)
+├── gradlew, gradlew.bat      Gradle wrapper (for app/)
+└── flutter_app/              Main AgriSmart Flutter application
+    ├── pubspec.yaml
+    ├── assets/               labels, model placeholders, READMEs
+    └── lib/
+        ├── main.dart
+        ├── main_app_shell.dart
+        ├── insect_live_scan_screen.dart
+        ├── crop_disease_screen.dart
+        ├── agri_store_screen.dart
+        ├── ai_farming_assistant_screen.dart
+        ├── admin_dashboard_screen.dart
+        ├── l10n/               UI translations
+        └── …
+```
+
+---
+
+## Legacy native Android app
+
+The original single-purpose **insect + crop harm** camera app lives under `app/`. It uses the same TFLite + labels idea as the Flutter live scan tab.
 
 ```bash
 # Windows
@@ -50,67 +99,24 @@ gradlew.bat installDebug
 ./gradlew installDebug
 ```
 
-Set `ANDROID_HOME` to your Android SDK path first, and `JAVA_HOME` to a JDK 17
-install (the bundled JDK inside Android Studio works:
-`%LOCALAPPDATA%\Programs\Android Studio\jbr` on Windows).
+Place `insect_model.tflite` in `app/src/main/assets/`. See `app/src/main/assets/README_MODEL.txt`.
+
+More detail: open this repo’s `app/` tree or use Android Studio on the repository root.
 
 ---
 
-## B. Running the Flutter version
+## Flutter app documentation
 
-See [`flutter_app/README.md`](flutter_app/README.md) for the full walkthrough.
-
-Short version:
-
-```bash
-cd flutter_app
-flutter create .          # fills in the android/, ios/, ... folders
-flutter pub get
-flutter run               # build + install on the connected device
-```
-
-After `flutter create .`, you also need to add the camera permission to
-`android/app/src/main/AndroidManifest.xml` and `ios/Runner/Info.plist`
-(snippets in `flutter_app/README.md`).
+Platform permissions, asset setup, and troubleshooting: [`flutter_app/README.md`](flutter_app/README.md).
 
 ---
 
-## Project layout
+## Security note
 
-```
-insect_crop_harm_camera_app/
-├── build.gradle              top-level Gradle config (Android)
-├── settings.gradle           Android project settings
-├── gradle.properties         JVM args + AndroidX flags
-├── gradlew  / gradlew.bat    Gradle wrapper scripts
-├── gradle/wrapper/
-│   ├── gradle-wrapper.jar          (binary, downloaded from gradle.org)
-│   └── gradle-wrapper.properties   pins Gradle 8.7
-│
-├── app/                      Native Android app (Java)
-│   ├── build.gradle
-│   └── src/main/
-│       ├── AndroidManifest.xml
-│       ├── assets/           labels.txt + model placeholder
-│       ├── java/com/example/insectcropcamera/
-│       │   ├── MainActivity.java
-│       │   ├── InsectClassifier.java
-│       │   ├── CropRiskDatabase.java
-│       │   ├── ImageUtils.java
-│       │   └── InsectResult.java
-│       └── res/              layout + styles
-│
-└── flutter_app/              Flutter app (Dart, Android + iOS)
-    ├── pubspec.yaml
-    ├── assets/               labels.txt + model placeholder
-    └── lib/
-        ├── main.dart
-        ├── insect_classifier.dart
-        └── crop_risk_database.dart
-```
+Authentication and product data are **stored on the device** for demonstration. Do not use demo admin credentials or local-only auth in production without a proper backend, HTTPS, and secure credential storage.
 
-## Insect classes (defined in both `labels.txt` files)
+---
 
-aphid, whitefly, grasshopper, beetle, caterpillar, fall armyworm, stem borer,
-leaf miner, thrips, bollworm, termite, rice bug, brown planthopper, cutworm,
-potato tuber moth, fruit borer.
+## License
+
+See repository owner for licensing. Third-party packages are listed in `flutter_app/pubspec.yaml`.

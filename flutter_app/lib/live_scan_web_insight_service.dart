@@ -10,7 +10,7 @@ class LiveScanWebInsightService {
   static final LiveScanWebInsightService instance = LiveScanWebInsightService._();
 
   static const _userAgent =
-      'AgriSmartLiveScan/1.0 (https://example.com/contact; educational app)';
+      'AgriSmartLiveScan/1.0 (https://github.com/iaminputalisadak-ops/Agrismart; educational app)';
 
   String? _lastKey;
   String? _lastExtract;

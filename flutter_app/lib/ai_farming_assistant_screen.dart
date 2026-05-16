@@ -52,7 +52,7 @@ String _answerForFreeText(String query, String categoryFilter) {
       'doses with your local agricultural extension officer.';
 }
 
-/// Farming Q&A: preset chips plus a composer so typed questions show in the thread.
+/// Farming Q&A: preset chips plus a text field so typed questions show in the thread.
 class AiFarmingAssistantScreen extends StatefulWidget {
   const AiFarmingAssistantScreen({
     super.key,
@@ -72,8 +72,8 @@ class AiFarmingAssistantScreen extends StatefulWidget {
 
 class _AiFarmingAssistantScreenState extends State<AiFarmingAssistantScreen> {
   final ScrollController _chatScroll = ScrollController();
-  final TextEditingController _composer = TextEditingController();
-  final FocusNode _composerFocus = FocusNode();
+  final TextEditingController _questionInput = TextEditingController();
+  final FocusNode _questionFocus = FocusNode();
   final List<_ChatTurn> _turns = [];
 
   late String _categoryFilter;
@@ -101,8 +101,8 @@ class _AiFarmingAssistantScreenState extends State<AiFarmingAssistantScreen> {
   @override
   void dispose() {
     _chatScroll.dispose();
-    _composer.dispose();
-    _composerFocus.dispose();
+    _questionInput.dispose();
+    _questionFocus.dispose();
     super.dispose();
   }
 
@@ -136,10 +136,10 @@ class _AiFarmingAssistantScreenState extends State<AiFarmingAssistantScreen> {
   }
 
   void _sendTyped() {
-    final text = _composer.text.trim();
+    final text = _questionInput.text.trim();
     if (text.isEmpty) return;
     FocusScope.of(context).unfocus();
-    _composer.clear();
+    _questionInput.clear();
     final reply = _answerForFreeText(text, _categoryFilter);
     setState(() {
       _turns.add(_ChatTurn.user(text));
@@ -280,8 +280,8 @@ class _AiFarmingAssistantScreenState extends State<AiFarmingAssistantScreen> {
                         children: [
                           Expanded(
                             child: TextField(
-                              controller: _composer,
-                              focusNode: _composerFocus,
+                              controller: _questionInput,
+                              focusNode: _questionFocus,
                               minLines: 1,
                               maxLines: 4,
                               textInputAction: TextInputAction.newline,
